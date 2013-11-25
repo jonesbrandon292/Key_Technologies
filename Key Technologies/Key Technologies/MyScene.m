@@ -17,6 +17,8 @@
     
     CLLocationManager* locationManager;
     SKLabelNode* locationLabel;
+    
+    SKLabelNode* proximityLabel;
 }
 
 
@@ -35,8 +37,8 @@
         
         [self addChild:myLabel];
         
-        //GPS
-        [self startStandardUpdates];
+        //Initialize technolgies
+        [self Initialize];
         
         locationLabel = [SKLabelNode labelNodeWithFontNamed:@"Chalkduster"];
         
@@ -55,11 +57,30 @@
                                              CGRectGetMaxY(self.frame) * 0.15f);
         
         [self addChild:motionLabel];
+        
+        
+        
+        proximityLabel = [SKLabelNode labelNodeWithFontNamed:@"Chalkduster"];
+        
+        proximityLabel.text = @"Is User Close: ";
+        proximityLabel.fontSize = 8;
+        proximityLabel.position = CGPointMake(CGRectGetMidX(self.frame),
+                                           CGRectGetMaxY(self.frame) * 0.05f);
+        
+        [self addChild:proximityLabel];
     }
     return self;
 }
 
-- (void)startStandardUpdates
+- (void)sensorStateChange:(NSNotificationCenter *)notification
+{
+    if ([[UIDevice currentDevice] proximityState] == YES)
+        proximityLabel.text = @"Is User Close: True";
+    else
+        proximityLabel.text = @"Is User Close: False";
+}
+
+- (void)Initialize
 {
     // Create the location manager if this object does not
     // already have one.
@@ -84,7 +105,10 @@
          [(id) self setAcceleration:accelerometerData.acceleration];
          [self performSelectorOnMainThread:@selector(update) withObject:nil waitUntilDone:NO];
      }];
-                         
+    
+    [[UIDevice currentDevice] setProximityMonitoringEnabled:YES];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(sensorStateChange:) name:@"UIDeviceProximityStateDidChangeNotification" object:nil];
 }
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -110,6 +134,8 @@
     locationLabel.text = [NSString stringWithFormat:@"latitude %+.6f, longitude %+.6f\n", locationManager.location.coordinate.latitude, locationManager.location.coordinate.longitude];
     
     motionLabel.text = [NSString stringWithFormat:@"XAccel: %+.6f, YAccel %+.6f, ZAccel: %+.6f\n", self.acceleration.x, self.acceleration.y, self.acceleration.z];
+    
+    
 }
 
 @end
