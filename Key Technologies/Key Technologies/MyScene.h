@@ -7,7 +7,11 @@
 //
 
 #import <SpriteKit/SpriteKit.h>
+#import <CoreLocation/CoreLocation.h>
+#import <CoreMotion/CoreMotion.h>
 
 @interface MyScene : SKScene
+
+@property CMAcceleration acceleration;
 
 @end

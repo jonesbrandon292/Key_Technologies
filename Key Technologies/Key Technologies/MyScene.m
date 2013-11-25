@@ -7,13 +7,18 @@
 //
 
 #import "MyScene.h"
-#import <CoreLocation/CoreLocation.h>
+
 
 @implementation MyScene
 {
+    CMMotionManager* motionManager;
+    SKLabelNode* motionLabel;
+    NSOperationQueue* queue;
+    
     CLLocationManager* locationManager;
     SKLabelNode* locationLabel;
 }
+
 
 -(id)initWithSize:(CGSize)size {
     if (self = [super initWithSize:size]) {
@@ -41,6 +46,15 @@
                                        CGRectGetMaxY(self.frame) * 0.25f);
         
         [self addChild:locationLabel];
+        
+        motionLabel = [SKLabelNode labelNodeWithFontNamed:@"Chalkduster"];
+        
+        motionLabel.text = @"Accelerometer Position: ";
+        motionLabel.fontSize = 8;
+        motionLabel.position = CGPointMake(CGRectGetMidX(self.frame),
+                                             CGRectGetMaxY(self.frame) * 0.15f);
+        
+        [self addChild:motionLabel];
     }
     return self;
 }
@@ -59,6 +73,18 @@
     locationManager.distanceFilter = 1; // meters
     
     [locationManager startUpdatingLocation];
+    
+    if(nil == motionManager)
+        motionManager = [[CMMotionManager alloc] init];
+    
+    motionManager.accelerometerUpdateInterval = 1.0f/60.0f;
+    
+    [motionManager startAccelerometerUpdatesToQueue:queue withHandler:
+     ^(CMAccelerometerData *accelerometerData, NSError *error) {
+         [(id) self setAcceleration:accelerometerData.acceleration];
+         [self performSelectorOnMainThread:@selector(update) withObject:nil waitUntilDone:NO];
+     }];
+                         
 }
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -82,6 +108,8 @@
 -(void)update:(CFTimeInterval)currentTime
 {
     locationLabel.text = [NSString stringWithFormat:@"latitude %+.6f, longitude %+.6f\n", locationManager.location.coordinate.latitude, locationManager.location.coordinate.longitude];
+    
+    motionLabel.text = [NSString stringWithFormat:@"XAccel: %+.6f, YAccel %+.6f, ZAccel: %+.6f\n", self.acceleration.x, self.acceleration.y, self.acceleration.z];
 }
 
 @end
